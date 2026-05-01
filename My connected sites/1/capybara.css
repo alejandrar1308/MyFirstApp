@@ -150,7 +150,7 @@
 .head::after {
   content: "";
   position: absolute;
-  left: 6%;
+  left: 4%;
   top: 61%;
   width: 16%;
   height: 15%;
@@ -398,6 +398,6 @@
 
 @media (max-width: 620px) {
   .lashes.left {
-    left: 14%;
+    left: 12%;
   }
 }
