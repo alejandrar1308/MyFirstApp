@@ -1,0 +1,680 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Capybara Pond</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cherry+Bomb+One&family=Chewy&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --sky: #bde7ef;
+      --water: #70b8c4;
+      --grass: #78a85a;
+      --reed: #4f7d42;
+      --fur: #8b6a4d;
+      --fur-mid: #73563e;
+      --fur-dark: #4f3425;
+      --fur-light: #b08a66;
+      --sun: #ffd45f;
+      --text: #2a241f;
+      --panel: rgba(255, 255, 255, 0.82);
+      --shadow: 0 18px 40px rgba(38, 72, 63, 0.18);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: var(--text);
+      background: url("test.jpg") center / cover no-repeat fixed;
+      overflow-x: hidden;
+    }
+
+    .scene {
+      position: relative;
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      padding: 0.35rem 0 1.25rem;
+      background: url("test.jpg") center / cover no-repeat;
+      isolation: isolate;
+    }
+
+    .sun {
+      display: none;
+      position: absolute;
+      top: 2rem;
+      right: 8vw;
+      width: 92px;
+      height: 92px;
+      border-radius: 50%;
+      background: var(--sun);
+      box-shadow: 0 0 40px rgba(255, 212, 95, 0.7);
+      z-index: -1;
+    }
+
+    .cloud {
+      display: none;
+      position: absolute;
+      width: 150px;
+      height: 52px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.82);
+      box-shadow:
+        24px -18px 0 12px rgba(255, 255, 255, 0.82),
+        62px -24px 0 18px rgba(255, 255, 255, 0.82),
+        102px -12px 0 14px rgba(255, 255, 255, 0.82),
+        126px 4px 0 2px rgba(255, 255, 255, 0.82);
+      filter: blur(1.5px);
+      z-index: -1;
+    }
+
+    .cloud.one {
+      top: 7rem;
+      left: 8vw;
+    }
+
+    .cloud.two {
+      top: 10rem;
+      right: 18vw;
+      transform: scale(0.82);
+      opacity: 0.86;
+    }
+
+    .cloud.three {
+      top: 4.75rem;
+      left: 42vw;
+      transform: scale(0.74);
+      opacity: 0.84;
+    }
+
+    .controls {
+      width: min(920px, 100%);
+      margin: 0 auto;
+      background: var(--panel);
+      border: 1px solid rgba(255, 255, 255, 0.75);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    header {
+      width: min(920px, 100%);
+      margin: 0 auto;
+      padding: 0.25rem 1.2rem 0.9rem;
+      text-align: center;
+    }
+
+    .title-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.7rem;
+      flex-wrap: wrap;
+    }
+
+    h1 {
+      margin: 0 0 0.35rem;
+      font-family: "Cherry Bomb One", "Segoe UI", Arial, sans-serif;
+      font-size: clamp(3rem, 9vw, 7rem);
+      line-height: 1;
+      letter-spacing: 0;
+      color: #4b341f;
+      text-shadow: 0 3px 0 rgba(255, 247, 214, 0.8);
+    }
+
+    p {
+      margin: 0.75rem auto 0;
+      max-width: 58ch;
+      font-family: "Chewy", "Segoe UI", Arial, sans-serif;
+      font-size: 25px;
+      padding: 0.8rem 1rem;
+      border: 1px solid rgba(255, 255, 255, 0.75);
+      border-radius: 18px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      opacity: 0;
+      transform: translateY(-8px);
+      pointer-events: none;
+      transition: opacity 160ms ease, transform 160ms ease;
+    }
+
+    header:has(.info-button:hover) .subtitle,
+    header:has(.info-button:focus-visible) .subtitle {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .pond {
+      position: relative;
+      width: 100%;
+      min-height: 480px;
+      margin: 0.75rem 0;
+      overflow: visible;
+    }
+
+    .side-button {
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #2f80d7;
+      z-index: 3;
+    }
+
+    .side-button.female {
+      background: #e879a7;
+    }
+
+    .info-button {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      min-height: 42px;
+      padding: 0;
+      border: 2px solid #8a6548;
+      border-radius: 50%;
+      color: white;
+      background: #f2b705;
+      font-size: 1.35rem;
+      font-weight: 900;
+      line-height: 1;
+      box-shadow: var(--shadow);
+    }
+
+    .info-button:hover {
+      background: #d99f00;
+    }
+
+    .water-line {
+      display: none;
+      position: absolute;
+      right: 5%;
+      bottom: 6%;
+      width: min(360px, 42vw);
+      aspect-ratio: 1.3 / 1;
+      background:
+        repeating-linear-gradient(174deg, rgba(255, 255, 255, 0.18) 0 18px, transparent 18px 42px),
+        linear-gradient(180deg, rgba(112, 184, 196, 0.9), #418b9b);
+      border-radius: 48% 52% 46% 54%;
+      box-shadow: inset 0 -14px 0 rgba(32, 102, 118, 0.16);
+    }
+
+    .reeds {
+      display: none;
+      position: absolute;
+      right: 4%;
+      bottom: 28%;
+      width: min(390px, 46vw);
+      height: 90px;
+      background:
+        linear-gradient(82deg, transparent 0 8%, var(--reed) 8% 9%, transparent 9% 18%, var(--reed) 18% 19%, transparent 19% 32%, var(--reed) 32% 33%, transparent 33% 48%, var(--reed) 48% 49%, transparent 49% 62%, var(--reed) 62% 63%, transparent 63% 80%, var(--reed) 80% 81%, transparent 81%);
+      opacity: 0.8;
+    }
+
+    .flower {
+      display: none;
+      position: absolute;
+      bottom: 13%;
+      width: 58px;
+      height: 118px;
+      z-index: 1;
+    }
+
+    .flower::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      width: 4px;
+      height: 78px;
+      border-radius: 999px;
+      background: #2f9b48;
+      transform: translateX(-50%);
+    }
+
+    .flower::after {
+      content: "";
+      position: absolute;
+      left: 64%;
+      bottom: 36px;
+      width: 20px;
+      height: 11px;
+      border-radius: 100% 0 100% 0;
+      background: #55bd47;
+      box-shadow: -23px 8px 0 #55bd47;
+      transform: translateX(-50%) rotate(-18deg);
+    }
+
+    .flower-head {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      width: 48px;
+      height: 48px;
+      transform: translateX(-50%);
+    }
+
+    .petal {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 15px;
+      height: 25px;
+      border-radius: 50%;
+      background: var(--petal);
+      transform-origin: 50% 100%;
+    }
+
+    .petal.one { transform: translate(-50%, -100%) rotate(0deg); }
+    .petal.two { transform: translate(-50%, -100%) rotate(72deg); }
+    .petal.three { transform: translate(-50%, -100%) rotate(144deg); }
+    .petal.four { transform: translate(-50%, -100%) rotate(216deg); }
+    .petal.five { transform: translate(-50%, -100%) rotate(288deg); }
+
+    .flower-center {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #ffd65a;
+      transform: translate(-50%, -50%);
+      box-shadow: inset 0 0 0 3px rgba(117, 76, 22, 0.14);
+    }
+
+    .flower.orange {
+      left: 8%;
+      --petal: #f47c2b;
+    }
+
+    .flower.pink {
+      left: 16%;
+      bottom: 24%;
+      --petal: #df3c8d;
+      transform: scale(0.54);
+    }
+
+    .flower.yellow {
+      right: 28%;
+      bottom: 11%;
+      --petal: #f6c84f;
+      transform: scale(0.92);
+    }
+
+    .flower.purple {
+      right: 44%;
+      bottom: 8%;
+      --petal: #d86f9c;
+      transform: scale(0.82);
+    }
+
+    .flower.blue {
+      left: 25%;
+      bottom: 10%;
+      --petal: #58a6e8;
+      transform: scale(0.86) rotate(-5deg);
+    }
+
+    .flower.red {
+      right: 30%;
+      bottom: 7%;
+      --petal: #ef5b4f;
+      transform: scale(0.76) rotate(4deg);
+    }
+
+    .bubble {
+      position: absolute;
+      left: 50%;
+      top: 8%;
+      translate: -50% 0;
+      min-width: 170px;
+      padding: 0.7rem 0.9rem;
+      text-align: center;
+      font-weight: 800;
+      background: #fff7d6;
+      border: 2px solid rgba(111, 71, 46, 0.18);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.8rem;
+      padding: 0.9rem;
+    }
+
+    .stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      font-weight: 800;
+    }
+
+    button,
+    .site-link {
+      min-height: 44px;
+      border: 0;
+      border-radius: 999px;
+      padding: 0.7rem 1rem;
+      font: inherit;
+      font-weight: 800;
+      color: white;
+      background: #2f7c72;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 120ms ease, filter 120ms ease;
+    }
+
+    button:hover,
+    .site-link:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.05);
+    }
+
+    .secondary {
+      background: #b75f2d;
+    }
+
+    @media (max-width: 620px) {
+      .scene {
+        padding: 0.75rem 0;
+      }
+
+      .controls {
+        border-radius: 14px;
+      }
+
+      .pond {
+        min-height: 420px;
+      }
+
+      .water-line {
+        right: 4%;
+        width: min(260px, 58vw);
+      }
+
+      .reeds {
+        right: 2%;
+        width: min(290px, 64vw);
+      }
+
+      .flower {
+        transform: scale(0.72);
+      }
+
+      .flower.pink {
+        left: 10%;
+        bottom: 22%;
+        transform: scale(0.46);
+      }
+
+      .flower.yellow {
+        right: 24%;
+        transform: scale(0.68);
+      }
+
+      .flower.purple {
+        right: 38%;
+        bottom: 7%;
+        transform: scale(0.62);
+      }
+
+      .flower.blue {
+        left: 18%;
+        bottom: 10%;
+        transform: scale(0.65) rotate(-5deg);
+      }
+
+      .flower.red {
+        right: 28%;
+        bottom: 5%;
+        transform: scale(0.58) rotate(4deg);
+      }
+
+      .side-button {
+        right: 0.75rem;
+        top: auto;
+        bottom: 0.75rem;
+        transform: none;
+      }
+
+      .info-button {
+        width: 38px;
+        height: 38px;
+        min-height: 38px;
+      }
+
+      .controls {
+        align-items: stretch;
+      }
+
+      button,
+      .site-link {
+        flex: 1 1 150px;
+        text-align: center;
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="capybara.css" />
+</head>
+<body>
+  <main class="scene">
+    <div class="sun" aria-hidden="true"></div>
+    <div class="cloud one" aria-hidden="true"></div>
+    <div class="cloud two" aria-hidden="true"></div>
+    <div class="cloud three" aria-hidden="true"></div>
+
+    <header>
+      <div class="title-row">
+        <h1>Capybara Pond</h1>
+        <button class="info-button" type="button" aria-label="Information">i</button>
+      </div>
+      <p class="subtitle">Click the capybara, feed it snacks, and give it a tiny spa day. This is Website One in your connected project.</p>
+    </header>
+
+    <section class="pond" aria-label="Interactive capybara pond">
+      <div class="reeds" aria-hidden="true"></div>
+      <div class="water-line" aria-hidden="true"></div>
+      <div class="flower orange" aria-hidden="true">
+        <div class="flower-head">
+          <span class="petal one"></span>
+          <span class="petal two"></span>
+          <span class="petal three"></span>
+          <span class="petal four"></span>
+          <span class="petal five"></span>
+          <span class="flower-center"></span>
+        </div>
+      </div>
+      <div class="flower pink" aria-hidden="true">
+        <div class="flower-head">
+          <span class="petal one"></span>
+          <span class="petal two"></span>
+          <span class="petal three"></span>
+          <span class="petal four"></span>
+          <span class="petal five"></span>
+          <span class="flower-center"></span>
+        </div>
+      </div>
+      <div class="flower yellow" aria-hidden="true">
+        <div class="flower-head">
+          <span class="petal one"></span>
+          <span class="petal two"></span>
+          <span class="petal three"></span>
+          <span class="petal four"></span>
+          <span class="petal five"></span>
+          <span class="flower-center"></span>
+        </div>
+      </div>
+      <div class="flower purple" aria-hidden="true">
+        <div class="flower-head">
+          <span class="petal one"></span>
+          <span class="petal two"></span>
+          <span class="petal three"></span>
+          <span class="petal four"></span>
+          <span class="petal five"></span>
+          <span class="flower-center"></span>
+        </div>
+      </div>
+      <div class="flower blue" aria-hidden="true">
+        <div class="flower-head">
+          <span class="petal one"></span>
+          <span class="petal two"></span>
+          <span class="petal three"></span>
+          <span class="petal four"></span>
+          <span class="petal five"></span>
+          <span class="flower-center"></span>
+        </div>
+      </div>
+      <div class="flower red" aria-hidden="true">
+        <div class="flower-head">
+          <span class="petal one"></span>
+          <span class="petal two"></span>
+          <span class="petal three"></span>
+          <span class="petal four"></span>
+          <span class="petal five"></span>
+          <span class="flower-center"></span>
+        </div>
+      </div>
+      <div class="bubble" id="bubble" aria-live="polite">very relaxed</div>
+      <div class="snack" id="snack" aria-hidden="true"></div>
+      <button class="side-button" id="male" type="button">Male</button>
+
+      <div class="capybara" id="capybara" role="button" tabindex="0" aria-label="Pet the capybara">
+        <div class="body"></div>
+        <div class="head">
+          <div class="ear left"></div>
+          <div class="ear right"></div>
+          <div class="eye"></div>
+          <div class="lashes left" aria-hidden="true"></div>
+          <div class="lashes right" aria-hidden="true"></div>
+          <div class="nose"></div>
+          <div class="mouth"></div>
+        </div>
+        <div class="leg one"></div>
+        <div class="leg two"></div>
+      </div>
+    </section>
+
+    <section class="controls" aria-label="Capybara controls">
+      <div class="stats">
+        <span>Pets: <span id="pets">0</span></span>
+        <span>Snacks: <span id="snacks">0</span></span>
+        <span>Mood: <span id="mood">Calm</span></span>
+      </div>
+      <button id="feed" type="button">Feed Snack</button>
+      <button class="secondary" id="spa" type="button">Spa Day</button>
+      <a class="site-link" href="../2/index.html">Website Two</a>
+    </section>
+  </main>
+
+  <script>
+    const capybara = document.getElementById("capybara");
+    const pond = document.querySelector(".pond");
+    const bubble = document.getElementById("bubble");
+    const feed = document.getElementById("feed");
+    const spa = document.getElementById("spa");
+    const pets = document.getElementById("pets");
+    const snacks = document.getElementById("snacks");
+    const mood = document.getElementById("mood");
+    const snack = document.getElementById("snack");
+    const male = document.getElementById("male");
+
+    let petCount = 0;
+    let snackCount = 0;
+    let isDragging = false;
+    let didDrag = false;
+
+    const happyLines = [
+      "gentle pat accepted",
+      "capybara approval +1",
+      "sunny pond mood",
+      "maximum chill reached"
+    ];
+
+    function celebrate(message, newMood) {
+      bubble.textContent = message;
+      mood.textContent = newMood;
+      capybara.classList.add("happy");
+      window.setTimeout(() => capybara.classList.remove("happy"), 260);
+    }
+
+    function petCapybara() {
+      if (didDrag) {
+        didDrag = false;
+        return;
+      }
+
+      petCount += 1;
+      pets.textContent = String(petCount);
+      celebrate(happyLines[petCount % happyLines.length], "Happy");
+    }
+
+    capybara.addEventListener("click", petCapybara);
+    capybara.addEventListener("pointerdown", (event) => {
+      isDragging = true;
+      didDrag = false;
+      moveCapybaraToCursor(event);
+      capybara.setPointerCapture(event.pointerId);
+    });
+
+    function moveCapybaraToCursor(event) {
+      const pondRect = pond.getBoundingClientRect();
+      const capybaraRect = capybara.getBoundingClientRect();
+      capybara.style.left = `${event.clientX - pondRect.left}px`;
+      capybara.style.top = `${event.clientY - pondRect.top - capybaraRect.height / 2}px`;
+      capybara.style.bottom = "auto";
+    }
+
+    capybara.addEventListener("pointermove", (event) => {
+      if (!isDragging) return;
+
+      didDrag = true;
+      moveCapybaraToCursor(event);
+    });
+
+    capybara.addEventListener("pointerup", (event) => {
+      isDragging = false;
+      capybara.releasePointerCapture(event.pointerId);
+    });
+
+    capybara.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        petCapybara();
+      }
+    });
+
+    feed.addEventListener("click", () => {
+      snackCount += 1;
+      snacks.textContent = String(snackCount);
+      snack.classList.add("show");
+      celebrate("crunch crunch", "Snacky");
+      window.setTimeout(() => snack.classList.remove("show"), 850);
+    });
+
+    spa.addEventListener("click", () => {
+      celebrate("warm stone nap unlocked", "Zen");
+      document.body.style.setProperty("--water", "#8fcbd6");
+      window.setTimeout(() => document.body.style.setProperty("--water", "#70b8c4"), 900);
+    });
+
+    male.addEventListener("click", () => {
+      const isFemale = male.classList.toggle("female");
+      male.textContent = isFemale ? "Female" : "Male";
+    });
+  </script>
+</body>
+</html>

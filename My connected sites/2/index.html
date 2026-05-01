@@ -1,0 +1,841 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Website One Tasks</title>
+  <style>
+    :root {
+      --bg: #f5efe7;
+      --paper: #fffdf8;
+      --ink: #26211d;
+      --muted: #6b6259;
+      --line: #ddd0c1;
+      --accent: #2f7c72;
+      --accent-dark: #205951;
+      --done: #7a8b43;
+      --low: #4d83a8;
+      --medium: #b9842e;
+      --high: #b85c38;
+      --urgent: #9f3946;
+      --danger: #a94d38;
+      --shadow: 0 16px 34px rgba(59, 47, 38, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: var(--ink);
+      background:
+        linear-gradient(90deg, rgba(47, 124, 114, 0.09) 1px, transparent 1px),
+        linear-gradient(rgba(47, 124, 114, 0.07) 1px, transparent 1px),
+        var(--bg);
+      background-size: 28px 28px;
+    }
+
+    main {
+      width: min(960px, calc(100% - 1.5rem));
+      margin: 0 auto;
+      padding: 1.2rem 0;
+    }
+
+    header {
+      display: grid;
+      gap: 0.65rem;
+      margin-bottom: 1rem;
+      padding: 1.2rem;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.9rem, 5vw, 3.4rem);
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0;
+      max-width: 64ch;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .top-actions,
+    form,
+    .task {
+      display: flex;
+      gap: 0.65rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .top-actions {
+      margin-top: 0.35rem;
+    }
+
+    a,
+    button {
+      min-height: 42px;
+      border: 0;
+      border-radius: 999px;
+      padding: 0.65rem 0.95rem;
+      font: inherit;
+      font-weight: 800;
+      color: white;
+      background: var(--accent);
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform 120ms ease, background 120ms ease;
+    }
+
+    a:hover,
+    button:hover {
+      transform: translateY(-2px);
+      background: var(--accent-dark);
+    }
+
+    .secondary {
+      background: #8a6548;
+    }
+
+    .danger {
+      background: var(--danger);
+    }
+
+    .board {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .panel {
+      position: relative;
+      padding: 1rem;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+    }
+
+    form {
+      align-items: stretch;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.35rem;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .field {
+      flex: 1 1 260px;
+    }
+
+    input,
+    select {
+      width: 100%;
+      min-height: 44px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 0.65rem 0.75rem;
+      font: inherit;
+      color: var(--ink);
+      background: white;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 0.7rem;
+      margin-bottom: 1rem;
+    }
+
+    .stat {
+      padding: 0.85rem;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff8ed;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 1.8rem;
+      line-height: 1;
+    }
+
+    .stat span {
+      color: var(--muted);
+      font-size: 0.86rem;
+      font-weight: 700;
+    }
+
+    .list {
+      display: grid;
+      gap: 0.65rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .task {
+      justify-content: space-between;
+      padding: 0.8rem;
+      border: 1px solid var(--line);
+      border-left: 8px solid var(--low);
+      border-radius: 10px;
+      background: white;
+    }
+
+    .task.low {
+      border-left-color: var(--low);
+    }
+
+    .task.medium {
+      border-left-color: var(--medium);
+    }
+
+    .task.high {
+      border-left-color: var(--high);
+    }
+
+    .task.urgent {
+      border-left-color: var(--urgent);
+    }
+
+    .task.done {
+      background: #f3f6e9;
+      border-left-color: var(--done);
+    }
+
+    .task.done .task-title {
+      color: var(--muted);
+      text-decoration: line-through;
+    }
+
+    .task-main {
+      flex: 1 1 260px;
+      min-width: 0;
+    }
+
+    .task-title {
+      display: block;
+      overflow-wrap: anywhere;
+      font-weight: 900;
+    }
+
+    .task-date {
+      display: block;
+      margin-top: 0.28rem;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .task-code {
+      display: inline-block;
+      margin-bottom: 0.35rem;
+      border-radius: 999px;
+      padding: 0.22rem 0.52rem;
+      color: white;
+      background: var(--accent-dark);
+      font-size: 0.78rem;
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+    .tag {
+      display: inline-block;
+      margin-top: 0.35rem;
+      margin-right: 0.35rem;
+      border-radius: 999px;
+      padding: 0.25rem 0.55rem;
+      color: white;
+      background: #8a6548;
+      font-size: 0.78rem;
+      font-weight: 800;
+    }
+
+    .task.done .tag {
+      background: var(--done);
+    }
+
+    .urgency {
+      background: var(--low);
+    }
+
+    .urgency.low {
+      background: var(--low);
+    }
+
+    .urgency.medium {
+      background: var(--medium);
+    }
+
+    .urgency.high {
+      background: var(--high);
+    }
+
+    .urgency.urgent {
+      background: var(--urgent);
+    }
+
+    .progress-wrap {
+      margin-bottom: 1rem;
+    }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 0.45rem;
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .progress-track {
+      height: 16px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #efe3d5;
+    }
+
+    .progress-fill {
+      width: 0%;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent), var(--done));
+      transition: width 180ms ease;
+    }
+
+    .empty {
+      margin: 0;
+      padding: 1rem;
+      border: 1px dashed var(--line);
+      border-radius: 10px;
+      color: var(--muted);
+      text-align: center;
+      background: rgba(255, 255, 255, 0.68);
+    }
+
+    .section-title {
+      margin: 1rem 0 0.6rem;
+      font-size: 1rem;
+      line-height: 1.2;
+    }
+
+    @media (max-width: 680px) {
+      .summary {
+        grid-template-columns: 1fr;
+      }
+
+      a,
+      button {
+        flex: 1 1 auto;
+        text-align: center;
+      }
+
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>Website One Tasks</h1>
+      <p>Use this page to track pending changes for the capybara website. Tasks stay saved in this browser.</p>
+      <div class="top-actions">
+        <a href="../1/index.html">Open Website One</a>
+      </div>
+    </header>
+
+    <section class="board" aria-label="Task board for Website One">
+      <div class="panel">
+        <form id="taskForm">
+          <div class="field">
+            <label for="taskText">New task</label>
+            <input id="taskText" name="taskText" type="text" placeholder="Change the font of the title" required />
+          </div>
+          <div class="field">
+            <label for="taskType">Area</label>
+            <select id="taskType" name="taskType">
+              <option>Design</option>
+              <option>Content</option>
+              <option>Interaction</option>
+              <option>Fix</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="taskUrgency">Urgency</label>
+            <select id="taskUrgency" name="taskUrgency">
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="urgent">Urgent</option>
+            </select>
+          </div>
+          <button type="submit">Add Task</button>
+        </form>
+      </div>
+
+      <div class="panel">
+        <div class="summary" aria-label="Task summary">
+          <div class="stat">
+            <strong id="totalCount">0</strong>
+            <span>Total</span>
+          </div>
+          <div class="stat">
+            <strong id="pendingCount">0</strong>
+            <span>Pending</span>
+          </div>
+          <div class="stat">
+            <strong id="doneCount">0</strong>
+            <span>Done</span>
+          </div>
+          <div class="stat">
+            <strong id="completePercent">0%</strong>
+            <span>Completed</span>
+          </div>
+          <div class="stat">
+            <strong id="leftPercent">0%</strong>
+            <span>Left</span>
+          </div>
+        </div>
+
+        <div class="progress-wrap" aria-label="Completion progress">
+          <div class="progress-label">
+            <span id="progressText">0% complete</span>
+            <span id="leftText">0% left</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+        </div>
+
+        <h2 class="section-title">Pending Tasks</h2>
+        <ul class="list" id="taskList"></ul>
+        <p class="empty" id="emptyMessage">No pending tasks yet. Add one above.</p>
+
+        <h2 class="section-title">Completed Tasks</h2>
+        <ul class="list" id="completedTaskList"></ul>
+        <p class="empty" id="completedEmptyMessage">No completed tasks yet.</p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const taskForm = document.getElementById("taskForm");
+    const taskText = document.getElementById("taskText");
+    const taskType = document.getElementById("taskType");
+    const taskUrgency = document.getElementById("taskUrgency");
+    const taskList = document.getElementById("taskList");
+    const completedTaskList = document.getElementById("completedTaskList");
+    const emptyMessage = document.getElementById("emptyMessage");
+    const completedEmptyMessage = document.getElementById("completedEmptyMessage");
+    const totalCount = document.getElementById("totalCount");
+    const pendingCount = document.getElementById("pendingCount");
+    const doneCount = document.getElementById("doneCount");
+    const completePercent = document.getElementById("completePercent");
+    const leftPercent = document.getElementById("leftPercent");
+    const progressText = document.getElementById("progressText");
+    const leftText = document.getElementById("leftText");
+    const progressFill = document.getElementById("progressFill");
+    const storageKey = "website-one-tasks";
+    const taskTwoMigrationKey = "task-002-completed-migration";
+    const createdAt = new Date().toISOString();
+    const exampleTasks = [
+      {
+        id: crypto.randomUUID(),
+        code: "TASK-001",
+        text: "Change the font of the title",
+        type: "Design",
+        urgency: "medium",
+        assignedAt: createdAt,
+        completedAt: "",
+        done: false
+      },
+      {
+        id: crypto.randomUUID(),
+        code: "TASK-002",
+        text: "Change the capybara's design",
+        type: "Design",
+        urgency: "high",
+        assignedAt: createdAt,
+        completedAt: createdAt,
+        done: true
+      },
+      {
+        id: crypto.randomUUID(),
+        code: "TASK-003",
+        text: "Design a more attractive environment",
+        type: "Design",
+        urgency: "high",
+        assignedAt: createdAt,
+        completedAt: "",
+        done: false
+      },
+      {
+        id: crypto.randomUUID(),
+        code: "TASK-004",
+        text: "Add more languages on the page",
+        type: "Content",
+        urgency: "medium",
+        assignedAt: createdAt,
+        completedAt: "",
+        done: false
+      },
+      {
+        id: crypto.randomUUID(),
+        code: "TASK-005",
+        text: "Add a second eye to the capybara",
+        type: "Design",
+        urgency: "high",
+        assignedAt: createdAt,
+        completedAt: "",
+        done: false
+      },
+      {
+        id: crypto.randomUUID(),
+        code: "TASK-006",
+        text: "Add animations to the capybara",
+        type: "Interaction",
+        urgency: "medium",
+        assignedAt: createdAt,
+        completedAt: "",
+        done: false
+      },
+      {
+        id: crypto.randomUUID(),
+        code: "TASK-007",
+        text: "Add accessories",
+        type: "Design",
+        urgency: "medium",
+        assignedAt: createdAt,
+        completedAt: "",
+        done: false
+      },
+      {
+        id: crypto.randomUUID(),
+        code: "TASK-008",
+        text: "Organize Website 1 JavaScript into its own script.js file",
+        type: "Interaction",
+        urgency: "medium",
+        assignedAt: createdAt,
+        completedAt: "",
+        done: false
+      },
+      {
+        id: crypto.randomUUID(),
+        code: "TASK-009",
+        text: "Move Website 1 general page styles into a separate styles.css file",
+        type: "Design",
+        urgency: "medium",
+        assignedAt: createdAt,
+        completedAt: "",
+        done: false
+      },
+      {
+        id: crypto.randomUUID(),
+        code: "TASK-010",
+        text: "Save the Male/Female button choice so it stays after refreshing",
+        type: "Interaction",
+        urgency: "medium",
+        assignedAt: createdAt,
+        completedAt: "",
+        done: false
+      },
+      {
+        id: crypto.randomUUID(),
+        code: "TASK-011",
+        text: "Add a clearer title or label for the Male/Female button",
+        type: "Content",
+        urgency: "low",
+        assignedAt: createdAt,
+        completedAt: "",
+        done: false
+      },
+      {
+        id: crypto.randomUUID(),
+        code: "TASK-012",
+        text: "Improve Website 1 mobile layout so the side button does not cover the capybara",
+        type: "Fix",
+        urgency: "high",
+        assignedAt: createdAt,
+        completedAt: "",
+        done: false
+      },
+      {
+        id: crypto.randomUUID(),
+        code: "TASK-013",
+        text: "Add a small task search or filter feature to Website 2",
+        type: "Interaction",
+        urgency: "medium",
+        assignedAt: createdAt,
+        completedAt: "",
+        done: false
+      },
+      {
+        id: crypto.randomUUID(),
+        code: "TASK-014",
+        text: "Add an edit button for existing tasks in Website 2",
+        type: "Interaction",
+        urgency: "medium",
+        assignedAt: createdAt,
+        completedAt: "",
+        done: false
+      },
+      {
+        id: crypto.randomUUID(),
+        code: "TASK-015",
+        text: "Make completed task dates permanent and easier to read",
+        type: "Content",
+        urgency: "low",
+        assignedAt: createdAt,
+        completedAt: "",
+        done: false
+      },
+      {
+        id: crypto.randomUUID(),
+        code: "TASK-016",
+        text: "Add a confirmation before deleting tasks",
+        type: "Fix",
+        urgency: "high",
+        assignedAt: createdAt,
+        completedAt: "",
+        done: false
+      },
+      {
+        id: crypto.randomUUID(),
+        code: "TASK-017",
+        text: "Clean up or archive capy.htm if it is only being used as a reference file",
+        type: "Fix",
+        urgency: "low",
+        assignedAt: createdAt,
+        completedAt: "",
+        done: false
+      }
+    ];
+
+    let tasks = loadTasks();
+
+    function taskCode(number) {
+      return `TASK-${String(number).padStart(3, "0")}`;
+    }
+
+    function nextTaskCode() {
+      const highest = tasks.reduce((max, task) => {
+        const match = String(task.code || "").match(/^TASK-(\d+)$/);
+        return match ? Math.max(max, Number(match[1])) : max;
+      }, 0);
+
+      return taskCode(highest + 1);
+    }
+
+    function normalizeTasks(savedTasks) {
+      let changed = false;
+      const normalized = savedTasks.map((task, index) => {
+        const updated = { ...task };
+
+        if (!updated.code) {
+          updated.code = taskCode(index + 1);
+          changed = true;
+        }
+
+        if (!updated.assignedAt) {
+          updated.assignedAt = createdAt;
+          changed = true;
+        }
+
+        if (updated.done && !updated.completedAt) {
+          updated.completedAt = createdAt;
+          changed = true;
+        }
+
+        if (!updated.done && updated.completedAt) {
+          updated.completedAt = "";
+          changed = true;
+        }
+
+        return updated;
+      });
+
+      exampleTasks.forEach((exampleTask) => {
+        const alreadySaved = normalized.some((task) => task.code === exampleTask.code);
+        if (!alreadySaved) {
+          normalized.push({ ...exampleTask, id: crypto.randomUUID() });
+          changed = true;
+        }
+      });
+
+      const taskTwo = normalized.find((task) => task.code === "TASK-002");
+      const taskTwoMigrated = localStorage.getItem(taskTwoMigrationKey);
+      if (taskTwo && !taskTwo.done && !taskTwoMigrated) {
+        taskTwo.done = true;
+        taskTwo.completedAt = createdAt;
+        localStorage.setItem(taskTwoMigrationKey, "true");
+        changed = true;
+      }
+
+      if (changed) {
+        localStorage.setItem(storageKey, JSON.stringify(normalized));
+      }
+
+      return normalized;
+    }
+
+    function loadTasks() {
+      const saved = localStorage.getItem(storageKey);
+      if (!saved) return exampleTasks;
+
+      try {
+        return normalizeTasks(JSON.parse(saved));
+      } catch {
+        return exampleTasks;
+      }
+    }
+
+    function saveTasks() {
+      localStorage.setItem(storageKey, JSON.stringify(tasks));
+    }
+
+    function formatDateTime(value) {
+      if (!value) return "Not recorded";
+
+      return new Date(value).toLocaleString([], {
+        dateStyle: "medium",
+        timeStyle: "short"
+      });
+    }
+
+    function createTaskItem(task) {
+      const urgency = task.urgency || "low";
+      const item = document.createElement("li");
+      item.className = task.done ? `task ${urgency} done` : `task ${urgency}`;
+
+      const main = document.createElement("div");
+      main.className = "task-main";
+
+      const code = document.createElement("span");
+      code.className = "task-code";
+      code.textContent = task.code;
+
+      const title = document.createElement("span");
+      title.className = "task-title";
+      title.textContent = task.text;
+
+      const assignedDate = document.createElement("span");
+      assignedDate.className = "task-date";
+      assignedDate.textContent = `Assigned: ${formatDateTime(task.assignedAt)}`;
+
+      const completedDate = document.createElement("span");
+      completedDate.className = "task-date";
+      completedDate.textContent = `Completed: ${formatDateTime(task.completedAt)}`;
+      completedDate.hidden = !task.done;
+
+      const tag = document.createElement("span");
+      tag.className = "tag";
+      tag.textContent = task.type;
+
+      const urgencyTag = document.createElement("span");
+      urgencyTag.className = `tag urgency ${urgency}`;
+      urgencyTag.textContent = task.done ? "Done" : `${urgency[0].toUpperCase()}${urgency.slice(1)} urgency`;
+
+      const toggle = document.createElement("button");
+      toggle.type = "button";
+      toggle.textContent = task.done ? "Move to Pending" : "Completed";
+      toggle.addEventListener("click", () => {
+        task.done = !task.done;
+        task.completedAt = task.done ? new Date().toISOString() : "";
+        saveTasks();
+        renderTasks();
+      });
+
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "danger";
+      remove.textContent = "Delete";
+      remove.addEventListener("click", () => {
+        tasks = tasks.filter((savedTask) => savedTask.id !== task.id);
+        saveTasks();
+        renderTasks();
+      });
+
+      main.append(code, title, assignedDate, completedDate, tag, urgencyTag);
+      item.append(main, toggle, remove);
+
+      return item;
+    }
+
+    function sortByUrgency(first, second) {
+      const urgencyOrder = {
+        urgent: 0,
+        high: 1,
+        medium: 2,
+        low: 3
+      };
+
+      return (urgencyOrder[first.urgency || "low"] ?? 3) - (urgencyOrder[second.urgency || "low"] ?? 3);
+    }
+
+    function renderTasks() {
+      taskList.innerHTML = "";
+      completedTaskList.innerHTML = "";
+
+      tasks.filter((task) => !task.done).sort(sortByUrgency).forEach((task) => {
+        taskList.append(createTaskItem(task));
+      });
+
+      tasks.filter((task) => task.done).sort(sortByUrgency).forEach((task) => {
+        completedTaskList.append(createTaskItem(task));
+      });
+
+      const done = tasks.filter((task) => task.done).length;
+      const completed = tasks.length === 0 ? 0 : Math.round((done / tasks.length) * 100);
+      const left = tasks.length === 0 ? 0 : 100 - completed;
+      totalCount.textContent = String(tasks.length);
+      pendingCount.textContent = String(tasks.length - done);
+      doneCount.textContent = String(done);
+      completePercent.textContent = `${completed}%`;
+      leftPercent.textContent = `${left}%`;
+      progressText.textContent = `${completed}% complete`;
+      leftText.textContent = `${left}% left`;
+      progressFill.style.width = `${completed}%`;
+      emptyMessage.hidden = tasks.some((task) => !task.done);
+      completedEmptyMessage.hidden = tasks.some((task) => task.done);
+    }
+
+    taskForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      tasks.unshift({
+        id: crypto.randomUUID(),
+        code: nextTaskCode(),
+        text: taskText.value.trim(),
+        type: taskType.value,
+        urgency: taskUrgency.value,
+        assignedAt: new Date().toISOString(),
+        completedAt: "",
+        done: false
+      });
+
+      taskForm.reset();
+      taskText.focus();
+      saveTasks();
+      renderTasks();
+    });
+
+    renderTasks();
+  </script>
+</body>
+</html>
